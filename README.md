@@ -4,7 +4,7 @@ A web-based development environment for building, testing, and deploying Sui age
 
 This project uses [AIM](https://aim.microchipgnu.pt) to run Markdown-based agentic workflows. 
 
-The juice is in the [content folder](/public/content). You can read all the workflows created and even edit and run on your own project. Or just visit the [live demo](https://sui-aim.vercel.app)
+The juicy workflows are in the [content folder](/public/content). You can read all the workflows created and even edit and run on your own project. Or just visit the [live demo](https://sui-aim.vercel.app)
 
 ![Captura de ecrã 2025-02-10, às 22 09 02](https://github.com/user-attachments/assets/82786b27-5169-43d0-97a8-6f5eb1e25729)
 
