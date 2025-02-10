@@ -1,8 +1,10 @@
 # Suiiii
 
-A powerful web-based development environment for building, testing, and deploying Sui blockchain applications. 
+A powerful web-based development environment for building, testing, and deploying Sui agentic workflows. 
 
 This project uses [AIM](https://aim.microchipgnu.pt) to run Markdown-based workflows. 
+
+![Captura de ecrã 2025-02-10, às 22 09 02](https://github.com/user-attachments/assets/82786b27-5169-43d0-97a8-6f5eb1e25729)
 
 ## 🌟 Features
 
