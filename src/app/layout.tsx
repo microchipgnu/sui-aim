@@ -28,6 +28,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <div className="fixed bottom-4 right-4 bg-black/80 text-white px-3 py-1.5 rounded-full text-sm">
+          Powered by <a href="https://aim.microchipgnu.pt" className="underline">AIM</a>
+        </div>
       </body>
     </html>
   );
