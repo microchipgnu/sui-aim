@@ -6,6 +6,16 @@ This project uses [AIM](https://aim.microchipgnu.pt) to run Markdown-based workf
 
 ![Captura de ecrã 2025-02-10, às 22 09 02](https://github.com/user-attachments/assets/82786b27-5169-43d0-97a8-6f5eb1e25729)
 
+## Workflows
+
+The juice is is [content folder](/public/content). You can read all the workflows created and even edit and run on your own project.
+
+## AIM
+
+AIM is another project I'm building, [see more here](https://aim.microchipgnu.pt)
+
+AIM is configured in [src/lib/aim.ts](./src/lib/aim.ts) and you can see all the tools it is running in its runtime.
+
 ## 🌟 Features
 
 - **Interactive Code Editor**: Built with Monaco Editor for a VS Code-like experience
