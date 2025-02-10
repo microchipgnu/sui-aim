@@ -1,27 +1,24 @@
-import { aim, defaultRuntimeOptions, Tag } from "@aim-sdk/core";
+import { aim, defaultRuntimeOptions } from "@aim-sdk/core";
 import { Sandbox } from '@e2b/code-interpreter';
-import { z } from "zod";
+import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { getFaucetHost, requestSuiFromFaucetV0 } from '@mysten/sui/faucet';
-import { suiGraphTools } from "./sui/graphql";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
+import { z } from "zod";
+import { getBluefinExchangeInfo, getMarketData } from "./bluefin/api";
+import { createFileSystem } from "./filesystem";
+import { naviAITools } from "./navi/api";
 import { createRandoAccount } from "./sui/account";
+import { suiGraphTools } from "./sui/graphql";
+import { springSuiTools } from "./suilend/springsui";
 
 const tools = {
-    test: {
-        description: "A test tool",
-        parameters: z.object({
-            name: z.string(),
-        }),
-        execute: async (input: any) => {
-            return 1 + 1;
-        }
-    },
     accountDetails: {
         description: "Get the details of an account",
-        parameters: z.object({
-            address: z.string(),
-        }),
+        parameters: z.object({}),
         execute: async (input: any) => {
-            return JSON.stringify(input);
+            const keyPair = Ed25519Keypair.fromSecretKey(process.env.SUI_PRIVATE_KEY || "");
+            return JSON.stringify({ address: keyPair.toSuiAddress() });
         }
     },
     createRandomAccount: {
@@ -44,39 +41,94 @@ const tools = {
             return JSON.stringify(response);
         }
     },
-    getGasPrice: {
-        description: "Get the current gas price of a transaction",
+    mintNFT: {
+        description: "Mint an NFT",
         parameters: z.object({
-            tx: z.any()
+            name: z.string({ description: "The name of the NFT" }),
+            description: z.string({ description: "The description of the NFT" }),
+            recipient: z.string({ description: `The address to mint the NFT to. Default is ${process.env.SUI_PUBLIC_ADDRESS}` }),
         }),
         execute: async (input: any) => {
-            return input.tx.gasPrice;
+            const tx = new Transaction();
+            tx.moveCall({
+                target: '0xec555da15e4b30307b20887792d173fe395ffddd7ec348670f3071d72a192598::devnet_nft::mint_to_address',
+                arguments: [
+                    tx.pure.string(input.name),
+                    tx.pure.string(input.description),
+                    tx.pure.string("https://cdn.prod.website-files.com/6425f546844727ce5fb9e5ab/65690e9a6e0d07d1b68c7050_sui-type.svg"),
+                    tx.pure.address(input.recipient)
+                ]
+            });
+
+            tx.setGasBudget(10000000);
+
+            return JSON.stringify(await tx.toJSON());
         }
     },
-    getGasBudget: {
-        description: "Get the current gas budget of a transaction",
+    submitTransaction: {
+        description: "Submit a transaction",
         parameters: z.object({
-            tx: z.any()
+            transaction: z.string(),
         }),
         execute: async (input: any) => {
-            return input.tx.gasBudget;
+            console.log(input);
+            const client = new SuiClient({ url: getFullnodeUrl('devnet') });
+            const keyPair = Ed25519Keypair.fromSecretKey(process.env.SUI_PRIVATE_KEY || "");
+
+            const tx = Transaction.from(input.transaction);
+
+            // Get coins owned by the address
+            const address = keyPair.getPublicKey().toSuiAddress();
+            const coins = await client.getCoins({
+                owner: address,
+                coinType: "0x2::sui::SUI"
+            });
+
+            if (coins.data.length === 0) {
+                throw new Error("No SUI coins found in wallet. Please get some SUI from the faucet first.");
+            }
+
+            const result = await client.signAndExecuteTransaction({
+                transaction: tx,
+                signer: keyPair
+            });
+
+            const txn = await client.waitForTransaction({ digest: result.digest });
+
+            return `Transaction submitted successfully. View it at https://suiscan.xyz/devnet/tx/${txn.digest}?network=devnet`;
         }
     },
-    getGasPayment: {
-        description: "Get the current gas payment coins of a transaction",
-        parameters: z.object({
-            tx: z.any()
-        }),
+    getBluefinExchangeInfo: {
+        description: "Get the exchange info",
+        parameters: z.object({}),
         execute: async (input: any) => {
-            return input.tx.gasPayment;
+            return getBluefinExchangeInfo();
+        }
+    },
+    getBluefinMarketData: {
+        description: "Get the market data",
+        parameters: z.object({}),
+        execute: async (input: any) => {
+            return getMarketData();
         }
     },
     ...suiGraphTools,
+    ...naviAITools,
+    ...springSuiTools
 }
+
+const fileSystem = createFileSystem();
+const files = fileSystem.getAllFiles();
+
 export const createAimConfig = (content: string) => aim({
     content,
     options: {
         ...defaultRuntimeOptions,
+        timeout: 1000 * 60 * 5,
+        experimental_files: files.reduce((acc, file) => {
+            acc[file.path] = { content: file.content };
+            return acc;
+        }, {} as Record<string, { content: string }>),
         env: {
             "OPENAI_API_KEY": process.env.OPENAI_API_KEY || "",
             "E2B_API_KEY": process.env.E2B_API_KEY || "",
@@ -96,12 +148,13 @@ export const createAimConfig = (content: string) => aim({
                 type: "code",
                 handlers: {
                     eval: async ({ code, language, variables }) => {
-                        const sbx = await Sandbox.create({ envs: { ...variables }, apiKey: process.env.E2B_API_KEY });
+                        console.log(code, language, variables);
+                        const sbx = await Sandbox.create({
+                            apiKey: process.env.E2B_API_KEY || "", logger: console
+                        });
                         const execution = await sbx.runCode(code, { language });
                         await sbx.kill();
-                        return {
-                            result: JSON.stringify(execution)
-                        };
+                        return execution.toJSON();
                     }
                 }
             }
@@ -117,6 +170,20 @@ export const createAimConfig = (content: string) => aim({
                             render: "tools",
                             execute: async function* ({ node, config, state }) {
                                 yield Object.keys(tools).join(',');
+                            },
+                        },
+                    },
+                },
+            },
+            {
+                plugin: {
+                    name: "time",
+                    version: "0.0.1",
+                    tags: {
+                        "wait": {
+                            render: "wait",
+                            execute: async function* ({ node, config, state }) {
+                                await new Promise(resolve => setTimeout(resolve, 1000));
                             },
                         },
                     },

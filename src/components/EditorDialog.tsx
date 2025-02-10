@@ -31,6 +31,7 @@ export function EditorDialog({
 
     const [showInputDialog, setShowInputDialog] = React.useState(false);
     const [inputValues, setInputValues] = React.useState<Record<string, any>>({});
+    const resultRef = React.useRef<HTMLDivElement>(null);
 
     // Parse frontmatter if present and extract input fields
     const hasFrontmatter = code.trim().startsWith('---');
@@ -93,6 +94,22 @@ export function EditorDialog({
         onRun(inputValues);
     };
 
+    // Auto-scroll to bottom when new content arrives
+    React.useEffect(() => {
+        if (resultRef.current) {
+            const scrollToBottom = () => {
+                resultRef.current?.scrollTo({
+                    top: resultRef.current.scrollHeight,
+                    behavior: 'smooth'
+                });
+            };
+            scrollToBottom();
+            // Add a small delay to ensure content is rendered
+            const timeoutId = setTimeout(scrollToBottom, 100);
+            return () => clearTimeout(timeoutId);
+        }
+    }, [result]);
+
     return (
         <>
             <Dialog open={file !== null} onOpenChange={(open) => !open && onClose()}>
@@ -122,142 +139,178 @@ export function EditorDialog({
                                 beforeMount={configurePrismSyntax}
                             />
                         ) : (
-                            <div className="h-full overflow-y-auto">
-                                <div className="output-preview p-4 bg-black/50 rounded-md text-sm text-gray-300">
+                            <div className="h-full overflow-y-auto overflow-x-auto" ref={resultRef}>
+                                <div className="output-preview h-full p-4 bg-black/50 rounded-md text-sm text-gray-300 whitespace-pre-wrap break-words" style={{ maxWidth: '100%' }}>
                                     <style scoped>
                                         {`
-                                .output-preview h1 {
-                                    font-size: 1.5rem;
-                                    font-weight: 600;
-                                    color: rgb(229, 231, 235);
-                                    padding-top: 0.75rem;
-                                    padding-bottom: 0.75rem;
-                                    margin-top: 0.75rem;
-                                    margin-bottom: 0.75rem;
-                                    line-height: 1.75;
-                                }
+                                        .output-preview div {
+                                            word-wrap: break-word;
+                                            overflow-wrap: break-word;
+                                            max-width: 100%;
+                                        }
 
-                                .output-preview p {
-                                    display: block;
-                                    padding: 0.5rem 0;
-                                    margin: 0.5rem 0;
-                                    color: #d1d5db;
-                                    line-height: 1.6;
-                                    font-size: 1rem;
-                                }
-
-                                .output-preview ai {
-                                    display: block;
-                                    padding: 0.75rem 1rem;
-                                    margin: 0.5rem 0.25rem;
-                                    border: 1px solid #3b82f6;
-                                    border-radius: 0.375rem;
-                                    background-color: rgba(59, 130, 246, 0.1);
-                                    color: #60a5fa;
-                                    font-weight: 500;
-                                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-                                    transition: all 0.2s ease;
-                                    cursor: pointer;
-                                    position: relative;
-                                }
-
-                                .output-preview ai:before {
-                                    content: "▼";
-                                    position: absolute;
-                                    right: 1rem;
-                                    top: 0.75rem;
-                                    transition: transform 0.2s ease;
-                                }
-
-                                .output-preview ai.collapsed:before {
-                                    transform: rotate(-90deg);
-                                }
-
-                                .output-preview ai.collapsed > *:not(:first-child) {
-                                    display: none;
-                                }
-
-                                .output-preview ai:hover {
-                                    background-color: rgba(59, 130, 246, 0.2);
-                                    border-color: #60a5fa;
-                                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-                                }
-
-                                .output-preview if {
-                                    display: block;
-                                    padding: 0.75rem;
-                                    margin: 0.5rem 0;
-                                    border: 2px solid #3b82f6;
-                                    border-radius: 0.375rem;
-                                    background-color: rgba(59, 130, 246, 0.1);
-                                    position: relative;
-                                }
-
-                                .output-preview else {
-                                    display: block;
-                                    padding: 0.75rem;
-                                    margin: 0.5rem 0;
-                                    border: 1px solid #3b82f6;
-                                    border-radius: 0.375rem;
-                                    background-color: rgba(59, 130, 246, 0.1);
-                                    color: #60a5fa;
-                                    font-weight: 500;
-                                }
-
-                                .output-preview loop {
-                                    display: block;
-                                    padding: 1rem;
-                                    margin: 1rem 0;
-                                    border: 2px solid #374151;
-                                    border-radius: 0.5rem;
-                                    background-color: rgba(31, 41, 55, 0.5);
-                                    position: relative;
-                                }
-
-                                .output-preview .loading {
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    height: 1.5rem;
-                                    width: 1.5rem;
-                                }
-
-                                .output-preview .loading div {
-                                    animation: spin 1s linear infinite;
-                                    height: 1rem;
-                                    width: 1rem;
-                                    border-radius: 9999px;
-                                    border-bottom: 2px solid #60a5fa;
-                                }
-
-                                @keyframes spin {
-                                    to {
-                                        transform: rotate(360deg);
+                                    .output-preview h1 {
+                                        font-size: 1.5rem;
+                                        font-weight: 600;
+                                        color: rgb(229, 231, 235);
+                                        padding-top: 0.75rem;
+                                        padding-bottom: 0.75rem;
+                                        margin-top: 0.75rem;
+                                        margin-bottom: 0.75rem;
+                                        line-height: 1.75;
                                     }
-                                }
-
-                                .animate-fadeIn {
-                                    animation: fadeIn 0.2s ease-in;
-                                }
-
-                                @keyframes fadeIn {
-                                    from {
-                                        opacity: 0;
+                                    
+                                    .output-preview h2 {
+                                        font-size: 1.25rem;
+                                        font-weight: 600;
+                                        color: rgb(229, 231, 235);
+                                        padding-top: 0.75rem;
+                                        padding-bottom: 0.75rem;
+                                        margin-top: 0.75rem;
+                                        margin-bottom: 0.75rem;
+                                        line-height: 1.75;
                                     }
-                                    to {
-                                        opacity: 1;
+
+                                    .output-preview p {
+                                        display: block;
+                                        padding: 0.5rem 0;
+                                        margin: 0.5rem 0;
+                                        color: #d1d5db;
+                                        line-height: 1.6;
+                                        font-size: 1rem;
+                                        word-wrap: break-word;
+                                        overflow-wrap: break-word;
                                     }
-                                }
-                                `}
+
+                                    .output-preview ai {
+                                        display: block;
+                                        padding: 0.75rem 1rem;
+                                        margin: 0.5rem 0.25rem;
+                                        border: 1px solid #3b82f6;
+                                        border-radius: 0.375rem;
+                                        background-color: rgba(59, 130, 246, 0.1);
+                                        color: #60a5fa;
+                                        font-weight: 500;
+                                        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+                                        transition: all 0.2s ease;
+                                        cursor: pointer;
+                                        position: relative;
+                                        word-wrap: break-word;
+                                        overflow-wrap: break-word;
+                                    }
+
+                                    .output-preview ai:before {
+                                        content: "▼";
+                                        position: absolute;
+                                        right: 1rem;
+                                        top: 0.75rem;
+                                        transition: transform 0.2s ease;
+                                    }
+
+                                    .output-preview ai.collapsed:before {
+                                        transform: rotate(-90deg);
+                                    }
+
+                                    .output-preview ai.collapsed > *:not(:first-child) {
+                                        display: none;
+                                    }
+
+                                    .output-preview ai:hover {
+                                        background-color: rgba(59, 130, 246, 0.2);
+                                        border-color: #60a5fa;
+                                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                                    }
+
+                                    .output-preview if {
+                                        display: block;
+                                        padding: 0.75rem;
+                                        margin: 0.5rem 0;
+                                        border: 2px solid #3b82f6;
+                                        border-radius: 0.375rem;
+                                        background-color: rgba(59, 130, 246, 0.1);
+                                        position: relative;
+                                        word-wrap: break-word;
+                                        overflow-wrap: break-word;
+                                    }
+
+                                    .output-preview else {
+                                        display: block;
+                                        padding: 0.75rem;
+                                        margin: 0.5rem 0;
+                                        border: 1px solid #3b82f6;
+                                        border-radius: 0.375rem;
+                                        background-color: rgba(59, 130, 246, 0.1);
+                                        color: #60a5fa;
+                                        font-weight: 500;
+                                        word-wrap: break-word;
+                                        overflow-wrap: break-word;
+                                    }
+
+                                    .output-preview loop {
+                                        display: block;
+                                        padding: 1rem;
+                                        margin: 1rem 0;
+                                        border: 2px solid #374151;
+                                        border-radius: 0.5rem;
+                                        background-color: rgba(31, 41, 55, 0.5);
+                                        position: relative;
+                                        word-wrap: break-word;
+                                        overflow-wrap: break-word;
+                                    }
+
+                                    .output-preview .loading {
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        height: 1.5rem;
+                                        width: 1.5rem;
+                                    }
+
+                                    .output-preview .loading div {
+                                        animation: spin 1s linear infinite;
+                                        height: 1rem;
+                                        width: 1rem;
+                                        border-radius: 9999px;
+                                        border-bottom: 2px solid #60a5fa;
+                                    }
+
+                                    @keyframes spin {
+                                        to {
+                                            transform: rotate(360deg);
+                                        }
+                                    }
+
+                                    .animate-fadeIn {
+                                        animation: fadeIn 0.2s ease-in;
+                                    }
+
+                                    @keyframes fadeIn {
+                                        from {
+                                            opacity: 0;
+                                        }
+                                        to {
+                                            opacity: 1;
+                                        }
+                                    }
+                                    `}
                                     </style>
-                                    <div dangerouslySetInnerHTML={{ __html: result }} />
+                                    <div className="max-h-[500px] overflow-auto w-full animate-fadeIn" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
+                                        <div dangerouslySetInnerHTML={{ __html: result }} />
+                                        {isRunning && (
+                                            <div className="sticky bottom-0 p-2 flex justify-center">
+                                                <div className="loading">
+                                                    <div />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         )}
                     </div>
 
                     <div className="mt-4">
-                        {!result ? (
+                        {!result || isRunning ? (
                             <Button
                                 onClick={handleRunClick}
                                 disabled={isRunning}

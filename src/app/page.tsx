@@ -5,6 +5,8 @@ export default function Home() {
   const fileSystem = createFileSystem();
   const files = fileSystem.getAllFiles();
 
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black p-8">
       <main className="max-w-6xl mx-auto">
@@ -13,7 +15,9 @@ export default function Home() {
             Sui Agent Typhoon
           </h1>
           <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-            Try out intelligent reusable agentic workflows using Markdown.
+            Explore <span className="text-blue-400 font-semibold">{files.length} agentic</span>{' '}
+            <span className="text-purple-400 font-semibold">reusable and composable</span> workflows built with{' '}
+            <span className="text-emerald-400 font-semibold">Markdown</span> to supercharge your Sui development.
           </p>
         </div>
 

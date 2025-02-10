@@ -15,3 +15,13 @@ Now lets get the account details.
 {% ai #accountDetails tools="*" /%}
 
 {% $accountDetails.result %}
+
+Now lets mint an NFT to the account.
+
+{% flow path="nfts/mint-nft.md" /%}
+
+# Summary
+
+Create a summary of the onboarding process. Show the user the account details and the transaction link for their NFT mint.
+
+{% ai model="openai/gpt-4o-mini" /%}

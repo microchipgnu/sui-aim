@@ -29,14 +29,69 @@ export function createSuiMergeCoinsTx(coinIds: string[]): Transaction {
 }
 
 /**
- * Creates a transaction to split a SUI coin into multiple coins
- * @param coinId The coin object ID to split
- * @param amounts Array of amounts to split into
+ * Creates a transaction to mint an NFT on Sui
+ * @param name The name of the NFT
+ * @param description The description of the NFT
+ * @param url The IPFS URL of the NFT content
  * @returns Transaction
  */
-export function createSuiSplitCoinTx(coinId: string, amounts: number[]): Transaction {
+export function createNftMintTx(name: string, description: string, url: string): Transaction {
     const tx = new Transaction();
-    const coin = tx.object(coinId);
-    tx.splitCoins(coin, amounts);
+    tx.moveCall({
+        target: '0x2::devnet_nft::mint',
+        arguments: [
+            tx.pure.string(name),
+            tx.pure.string(description),
+            tx.pure.string(url)
+        ]
+    });
+    return tx;
+}
+
+/**
+ * Creates a transaction to transfer an NFT to a recipient
+ * @param nftId The object ID of the NFT to transfer
+ * @param recipient The recipient address
+ * @returns Transaction
+ */
+export function createNftTransferTx(nftId: string, recipient: string): Transaction {
+    const tx = new Transaction();
+    tx.transferObjects([tx.object(nftId)], recipient);
+    return tx;
+}
+
+/**
+ * Creates a transaction to delete/burn an NFT
+ * @param nftId The object ID of the NFT to delete
+ * @returns Transaction
+ */
+export function createNftDeleteTx(nftId: string): Transaction {
+    const tx = new Transaction();
+    tx.moveCall({
+        target: '0x2::devnet_nft::burn',
+        arguments: [tx.object(nftId)]
+    });
+    return tx;
+}
+
+/**
+ * Creates a transaction to update an NFT's metadata
+ * @param nftId The object ID of the NFT to update
+ * @param name The new name
+ * @param description The new description 
+ * @param url The new IPFS URL
+ * @returns Transaction
+ */
+export function createNftUpdateTx(nftId: string, name: string, description: string, url: string): Transaction {
+    const tx = new Transaction();
+    tx.moveCall({
+        target: '0x2::devnet_nft::update',
+        arguments: [
+            tx.object(nftId),
+            tx.pure.string(name),
+            tx.pure.string(description), 
+            tx.pure.string(url)
+        ]
+    });
     return tx;
 }

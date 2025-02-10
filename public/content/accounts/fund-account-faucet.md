@@ -7,7 +7,9 @@ input:
     description: The address to fund
 ---
 
-let's fund an account with the faucet
+Let's fund an account with the faucet. Here's the address: {% $frontmatter.input.address %}
+
+Show the txn link if there is any. It goes like https://suiscan.xyz/devnet/tx/<digest>?network=devnet
 
 {% ai #fundAccountFaucet model="openai/gpt-4o-mini" tools="*" /%}
 

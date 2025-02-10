@@ -23,6 +23,8 @@ export function FileEditor({ files }: FileEditorProps) {
 
   const handleRun = async (inputs?: Record<string, any>) => {
     setIsRunning(true);
+    setResult(""); // Clear previous results
+    
     try {
       const response = await fetch('/api', {
         method: 'POST',
@@ -31,8 +33,32 @@ export function FileEditor({ files }: FileEditorProps) {
         },
         body: JSON.stringify({ content: code, inputs: inputs }),
       });
-      const data = await response.text();
-      setResult(data);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No reader available');
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) {
+          break;
+        }
+
+        const chunk = decoder.decode(value, { stream: true });
+        setResult(prev => prev + chunk);
+      }
+
+    } catch (error) {
+      console.error('Error running code:', error);
+      setResult(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
     } finally {
       setIsRunning(false);
     }
@@ -68,4 +94,4 @@ export function FileEditor({ files }: FileEditorProps) {
       />
     </>
   )
-} 
+}

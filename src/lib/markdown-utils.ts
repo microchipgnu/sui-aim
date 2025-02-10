@@ -24,6 +24,6 @@ export const readMarkdownFilesRecursively = (dir: string, baseDir: string): any[
 };
 
 export const getMarkdownFiles = () => {
-    const filesDirectory = path.join(process.cwd(), 'src', 'lib', 'files');
+    const filesDirectory = path.join(process.cwd(), 'public', 'content');
     return readMarkdownFilesRecursively(filesDirectory, filesDirectory);
 }; 
