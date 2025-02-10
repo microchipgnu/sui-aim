@@ -1,4 +1,4 @@
-import { aim, defaultRuntimeOptions } from "@aim-sdk/core";
+import { aim, defaultRuntimeOptions, GLOBAL_SCOPE, Tag } from "@aim-sdk/core";
 import { Sandbox } from '@e2b/code-interpreter';
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { getFaucetHost, requestSuiFromFaucetV0 } from '@mysten/sui/faucet';
@@ -11,6 +11,7 @@ import { naviAITools } from "./navi/api";
 import { createRandoAccount } from "./sui/account";
 import { suiGraphTools } from "./sui/graphql";
 import { springSuiTools } from "./suilend/springsui";
+import { handleAtomaCompletion } from "./atoma";
 
 const tools = {
     accountDetails: {
@@ -184,6 +185,27 @@ export const createAimConfig = (content: string) => aim({
                             render: "wait",
                             execute: async function* ({ node, config, state }) {
                                 await new Promise(resolve => setTimeout(resolve, 1000));
+                            },
+                        },
+                    },
+                },
+            },
+            {
+                plugin: {
+                    name: "atoma",
+                    version: "0.0.1",
+                    tags: {
+                        "completion": {
+                            render: "completion",
+                            execute: async function* ({ node, config, state }) {
+
+                                const contextText = Object.entries(state.context.textRegistry)
+                                    .map(([key, values]) => `${key}:\n${values.join('\n')}`)
+                                    .join('\n\n');
+                                    
+                                const result = await handleAtomaCompletion(contextText);
+                                
+                                yield new Tag("completion", {}, [result.textStream[0]]);
                             },
                         },
                     },
