@@ -2,7 +2,7 @@ import { createAimConfig } from "@/lib/aim";
 import { RenderableTreeNode, renderers } from "@aim-sdk/core";
 import { NextRequest, NextResponse } from 'next/server';
 
-export const maxDuration = 500;
+export const maxDuration = 300;
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
