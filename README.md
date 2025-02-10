@@ -10,6 +10,16 @@ This project uses [AIM](https://aim.microchipgnu.pt) to run Markdown-based agent
 
 The juice is is [content folder](/public/content). You can read all the workflows created and even edit and run on your own project.
 
+## AIM
+
+AIM is another project I'm building, [see more here](https://aim.microchipgnu.pt)
+
+You can use to write agentic workflows using Markdown.
+
+### AIM config
+
+AIM is configured in [src/lib/aim.ts](./src/lib/aim.ts) and you can see all the tools it is running in its runtime.
+
 ## Sui Ecosystem Tools
 
 ### Sui 
@@ -36,17 +46,6 @@ The juice is is [content folder](/public/content). You can read all the workflow
 - Decentralized inference
 - [Implementation](https://github.com/microchipgnu/sui-aim/tree/main/src/lib/atoma)
 - [AI tools](https://github.com/microchipgnu/sui-aim/blob/main/src/lib/aim.ts)
-
-## AIM
-
-AIM is another project I'm building, [see more here](https://aim.microchipgnu.pt)
-
-You can use to write agentic workflows using Markdown.
-
-### AIM config
-
-AIM is configured in [src/lib/aim.ts](./src/lib/aim.ts) and you can see all the tools it is running in its runtime.
-
 
 ## 🚀 Getting Started
 
